@@ -10,8 +10,19 @@ router = APIRouter(prefix="/posts", tags=["Posts"])
 
 
 @router.get("/", response_model=List[schemas.PostResponse])
-def get_posts(db: Session = Depends(get_db), limit: int =10, skip: int =0, search: Optional[str] = ""):
-    posts = db.query(models.Post).filter(models.Post.title.contains(search)).limit(limit).offset(skip).all()
+def get_posts(
+    db: Session = Depends(get_db),
+    limit: int = 10,
+    skip: int = 0,
+    search: Optional[str] = "",
+):
+    posts = (
+        db.query(models.Post)
+        .filter(models.Post.title.contains(search))
+        .limit(limit)
+        .offset(skip)
+        .all()
+    )
     return posts
 
 
@@ -56,10 +67,11 @@ def delete_post(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail=f"post id: {id} was not found"
         )
-    
+
     if chosen_post.first().owner_id != user.id:
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN, detail=f"You can delete only your own posts"
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=f"You can delete only your own posts",
         )
     else:
         chosen_post.delete(synchronize_session=False)
@@ -81,10 +93,11 @@ def update_posts(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail=f"post id: {id} was not found"
         )
-    
+
     if chosen_post.owner_id != user.id:
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN, detail=f"You can update only your own posts"
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=f"You can update only your own posts",
         )
     else:
         post_query.update(post.dict(), synchronize_session=False)
